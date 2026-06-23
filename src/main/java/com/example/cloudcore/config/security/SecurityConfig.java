@@ -13,31 +13,32 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtFilter;
+        private final JwtAuthenticationFilter jwtFilter;
 
-   @Bean
-public SecurityFilterChain securityFilterChain(
-        HttpSecurity http
-) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-    http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated()
-            )
-            .addFilterBefore(
-                    jwtFilter,
-                    UsernamePasswordAuthenticationFilter.class
-            );
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/api/auth/**")
+                                                .permitAll()
 
-    return http.build();
-}
+                                                .requestMatchers("/api/admin/**")
+                                                .hasRole("ADMIN")
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                                                .anyRequest()
+                                                .authenticated())
+                                .addFilterBefore(
+                                                jwtFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

@@ -1,6 +1,5 @@
 package com.example.cloudcore.config.security;
 
-import com.example.cloudcore.config.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collections;
 import java.io.IOException;
 
 @Component
@@ -40,11 +38,8 @@ public class JwtAuthenticationFilter
 
         String token = authHeader.substring(7);
 
-        System.out.println("TOKEN: " + token);
 
         boolean valid = jwtService.isTokenValid(token);
-
-        System.out.println("VALID: " + valid);
 
         if (valid) {
 

@@ -1,7 +1,10 @@
 package com.example.cloudcore.auth.service;
 
+import com.example.cloudcore.auth.dto.AccessTokenResponse;
 import com.example.cloudcore.auth.dto.LoginRequest;
+import com.example.cloudcore.auth.dto.RefreshRequest;
 import com.example.cloudcore.auth.dto.RegisterRequest;
+import com.example.cloudcore.auth.dto.TokenResponse;
 import com.example.cloudcore.auth.dto.UserResponse;
 import com.example.cloudcore.common.exception.BadRequestException;
 import com.example.cloudcore.config.security.JwtService;
@@ -10,7 +13,6 @@ import com.example.cloudcore.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.example.cloudcore.auth.dto.LoginResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +21,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     public UserResponse register(RegisterRequest request) {
 
@@ -39,7 +42,7 @@ public class AuthService {
                 savedUser.getEmail());
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request) {
 
         User user = userRepository
                 .findByEmail(request.email())
@@ -53,9 +56,41 @@ public class AuthService {
             throw new BadRequestException("Invalid credentials");
         }
 
-        String token = jwtService.generateToken(
+        String accessToken = jwtService.generateAccessToken(
                 user.getEmail());
 
-        return new LoginResponse(token);
+        String refreshToken = jwtService.generateRefreshToken(
+                user.getEmail());
+
+        return new TokenResponse(
+                accessToken,
+                refreshToken);
+    }
+
+    public AccessTokenResponse refresh(
+            RefreshRequest request) {
+
+        String refreshToken = request.refreshToken();
+
+        if (!jwtService.isTokenValid(refreshToken)) {
+            throw new BadRequestException(
+                    "Invalid refresh token");
+        }
+
+        String email = jwtService.extractEmail(refreshToken);
+
+        String storedToken = refreshTokenService.get(email);
+
+        if (storedToken == null ||
+                !storedToken.equals(refreshToken)) {
+
+            throw new BadRequestException(
+                    "Refresh token not found");
+        }
+
+        String accessToken = jwtService.generateAccessToken(email);
+
+        return new AccessTokenResponse(
+                accessToken);
     }
 }
